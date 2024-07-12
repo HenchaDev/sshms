@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the navbar */
+        .navbar-main {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+        }
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+    </style>
+
+    {% url 'users:login' as login_url %}
+</head>
+<body class="bg-gray-100">
+    <nav class="navbar-main flex justify-between items-center px-8 py-4 text-white">
+        <div class="navbar-brand">Welcome</div>
+        <div class="flex space-x-6">
+          <a href="{% url 'main:home' %}" class="nav-link">Home</a>
+          {% if user.is_authenticated %}
+            <a href="{% url 'users:profile' %}" class="nav-link">View Profile</a>
+            <a href="{% url 'users:logout_user' %}" class="nav-link">Logout</a>
+          {% else %}
+            <a href="{% url 'users:login' %}" class="nav-link">Login</a>
+            <a href="{% url 'users:sign_up' %}" class="nav-link">Sign Up</a>
+          {% endif %}
+          <a href="#" class="nav-link">Contact</a>
+        </div>
+      </nav>
+    <div class="container mx-auto mt-8">
+        <div class="grid grid-cols-3 gap-4">
+            <div class="col-span-2">
+                <h1 class="text-xl font-bold mb-4">Hello {{ request.user.username }}</h1>
+                {% block content %}
+                <div class="overflow-hidden flex items-center justify-center h-screen">
+                  <div class=" rounded xl w-full h-full bg-cover bg-center" style="background-image: url('{% static "main/images/hospital.jpg" %}');">
+                    <div class=" rounded-xl bg-black bg-opacity-50 h-full flex items-center justify-center">
+                      <div class="text-center text-white p-8">
+                        <h2 class="text-4xl font-bold mb-4">Chronic Disease Prediction and Management</h2>
+                          <p class="text-lg mb-4">Our project aims to predict the likelihood of developing chronic diseases based on various risk factors and health data. By leveraging advanced machine learning algorithms, we can provide accurate assessments to help individuals take proactive measures.</p>
+                          <p class="text-lg mb-4">In addition to disease prediction, our system offers personalized dietary advice and treatment plans tailored to each individual's unique health profile. Our goal is to empower users with the knowledge and guidance necessary to manage their health effectively.</p>
+                          <p class="text-lg">Through a user-friendly interface, you can input your health information, and our system will generate a comprehensive report outlining your disease risk, recommended dietary changes, and potential treatment options, if applicable.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endblock %}
+            </div>
+            <div>
+                <div class="bg-gray-200 p-4 rounded mb-4">
+                  <h2 class="text-xl font-semibold mb-2">Predictions</h2>
+                  <a href="{% url 'prediction:generate_texts' %}" class="block px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white">Go to Predictions</a>
+                </div>
+                {% if predictions %}
+                <div class="bg-gray-200 p-4 rounded max-h-96 overflow-y-auto">
+                  <h2 class="text-xl font-semibold mb-4">Previous Predictions</h2>
+                  {% for prediction in predictions|dictsortreversed:"created_at" %}
+                  <div class="mb-4">
+                    <h3 class="text-lg font-bold">{{ prediction.created_at }}</h3>
+                    <p class="bg-gray-300 p-2 rounded">{{ prediction.generated_text|linebreaksbr }}</p>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+        </div>
+    </div>
+
+    {% if show_login_popup %}
+    <script>
+        showLoginPopup();
+    </script>
+    {% endif %}
+
+
+    <script>
+        function showLoginPopup() {
+            var modal = document.createElement('div');
+            modal.classList.add('modal');
+
+            var modalContent = document.createElement('div');
+            modalContent.classList.add('modal-content');
+
+            var modalHeader = document.createElement('div');
+            modalHeader.classList.add('modal-header');
+            var modalTitle = document.createElement('h2');
+            modalTitle.textContent = 'Session Expired';
+            modalHeader.appendChild(modalTitle);
+
+            var modalBody = document.createElement('div');
+            modalBody.classList.add('modal-body');
+            var modalMessage = document.createElement('p');
+            modalMessage.textContent = 'Your session has expired. Please log in again.';
+            modalBody.appendChild(modalMessage);
+
+            var modalFooter = document.createElement('div');
+            modalFooter.classList.add('modal-footer');
+            var loginButton = document.createElement('button');
+            loginButton.textContent = 'Log In';
+            loginButton.addEventListener('click', function(){
+                window.location.href = '{% url 'users:login' %}';
+            });
+            modalFooter.appendChild(loginButton);
+
+            modalContent.appendChild(modalHeader);
+            modalContent.appendChild(modalBody);
+            modalContent.appendChild(modalFooter);
+
+            modal.appendChild(modalContent);
+
+            document.body.appendChild(modal);
+
+            modal.style.display = 'block';
+            modal.style.position = 'fixed';
+            modal.style.zIndex = '1';
+            modal.style.left = '0';
+            modal.style.top = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.overflow = 'auto';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.4)';
+
+            modalContent.style.backgroundColor = '#fefefe';
+            modalContent.style.margin = '15% auto';
+            modalContent.style.padding = '20px';
+            modalContent.style.border = '1px solid #888';
+            modalContent.style.width = '30%';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+{% extends 'main/home.html' %}
+
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictions</title>
+    <link href="https://cdn.tailwindcss.com" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+    <form id="generate-text-form" class="max-w-lg mx-auto bg-white p-4 rounded-lg shadow-md" action="{% url 'prediction:generate_texts' %}" method="post">
+        {% csrf_token %}
+        <!-- Display the prompt preview (readonly) -->
+        <div class="mb-4">
+            
+        </div>
+          
+          <div class="max-w-4xl mx-auto py-8">
+            <div class="bg-white rounded-lg shadow-lg p-8">
+              <h2 class="text-2xl font-bold mb-4">How the System Works</h2>
+              <p class="mb-6">This system uses the data inputted during the sign-up process to provide personalized information and recommendations. If you need to update any information, you can do so by visiting your profile page.</p>
+          
+              <div class="bg-red-100 border-l-4 border-red-500 p-4 mb-6">
+                <div class="flex">
+                  <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                      <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                  <div class="ml-3">
+                    <p class="text-sm text-red-700">
+                      <span class="font-medium">Disclaimer:</span> The information provided by this system might not be entirely accurate, and you should always consult with a healthcare professional for proper diagnosis and treatment.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        <button type="submit" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600">Submit</button>
+    </form>
+    <div id="response-area" class="max-w-lg mx-auto mt-8"></div>
+
+    <script>
+        document.getElementById('generate-text-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const form = new FormData(this);
+            fetch('', {
+                method: 'POST',
+                body: form,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Response from the server:', data);
+                console.log('Generated text:', data.response);
+        
+                // Split the response into sections
+                const sections = data.response.split('\n');
+        
+                // Create HTML elements for each section
+                const outputHTML = `
+                    <div class="bg-white p-4 rounded-lg shadow-md">
+                        <h2 class="block px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white">Your Prediction:</h2>
+                        ${sections.map(section => `
+                            <div class="mb-4">
+                                <h3 class="text-lg font-semibold mb-2">${section.split(':')[0]}:</h3>
+                                <p>${section.split(':')[1].trim()}</p>
+                            </div>
+                        `).join('')}
+                        <button id="more-info-btn" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded hover:bg-blue-600">Need more info about this? Click here</button>
+                        <div id="more-info" class="hidden mt-4">
+                            <p>${data.response.replace(/\n/g, '<br>')}</p>
+                        </div>
+                    </div>
+                `;
+        
+                document.getElementById('response-area').innerHTML = outputHTML;
+        
+                const moreInfoBtn = document.getElementById('more-info-btn');
+                const moreInfo = document.getElementById('more-info');
+        
+                moreInfoBtn.addEventListener('click', () => {
+                    moreInfo.classList.toggle('hidden');
+                    moreInfoBtn.textContent = moreInfo.classList.contains('hidden') ? 'Need more info about this? Click here' : 'Hide details';
+                });
+            })
+            .catch(error => console.error('Error:', error))
+        });
+        </script>
+</body>
+</html>
+{% endblock %}
